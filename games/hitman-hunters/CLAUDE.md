@@ -91,7 +91,7 @@ version, with a partner who explains everything.
 - **v8.1** — REAL TREES, built to his written spec: 4 species (oak/birch/
   pine/cypress) with branches, random lean, per-instance color tints, per-species
   perch heights, and GPU vertex-shader wind. 8 draw calls for the whole forest.
-- **v9 (CURRENT)** — INSIDE & UP. The game got a third dimension it never had.
+- **v9** — INSIDE & UP. The game got a third dimension it never had.
   - `buildRoom()` — the reusable interior shell: four walls with a GAP in one of them.
     The gap IS the doorway; no door logic exists. Hideout and lift lobby both use it.
     **Every future interior should be built from this.**
@@ -113,6 +113,26 @@ version, with a partner who explains everything.
   - Bug found and fixed on the way in: v8.1 dropped the hideout straight through a
     building. Harmless when it was a solid box; fatal once you could walk inside.
     Building placement now keeps an 18m plot clear around HIDEOUT.
+- **v9.1 (CURRENT)** — GOOD TREES. Agastya art-directed this one: brief was
+  "cartoon, just much better" — bold shapes, no photorealism.
+  - Canopies are NINE clumps in three tiers (was 3 spheres). Same three instanced
+    meshes, just 3x the instances — 9 clumps cost the SAME draw calls as 3.
+  - `foliageTex()` draws a SOLID canvas and PUNCHES HOLES in it (~88% coverage),
+    used with `alphaTest`. Do NOT invert this to "scatter leaves on transparent":
+    mipmaps average the alpha as trees recede, and a sparse texture drops below the
+    cutoff and makes entire distant canopies vanish. Learned the hard way.
+  - Canopy materials are `side: DoubleSide` on purpose — the gaps then reveal the
+    shaded inside of the canopy instead of raw sky. Without it the holes read as
+    polka dots. This is the single biggest quality lever in the whole tree system.
+  - `dentGeo()` hashes VERTEX POSITION, not index, so a sphere's duplicated UV-seam
+    vertices move together and no crack opens along the seam.
+  - Bark: two trunk meshes now (rough bark + birch's pale dashed bark). Trunk tint
+    colours were brightened because they now MULTIPLY a texture.
+  - Upper canopy tiers are tinted lighter — free sunlight-from-above, since a colour
+    was already being set per instance.
+  - Branch tips get leaf clusters; each tree gets a soft base shadow disc.
+  - 11 tree draw calls (was 8). Wind shader untouched — Agastya deliberately left
+    fluttering wind out of scope, so do NOT add it unasked.
 
 ## 5. Current state & environment quirks
 
