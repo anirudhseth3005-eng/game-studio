@@ -4,7 +4,14 @@
       "Bash(git add *)",
       "Bash(git commit -qm '🎮 Studio setup: git versioning, checkpoints, gg tool, deploy pipeline *)",
       "Bash(git tag *)",
-      "Bash(./gg status *)"
+      "Bash(./gg status *)",
+      "Bash(gh api *)",
+      "Bash(curl -sS https://www.agastya.fun)",
+      "Bash(node -e ' *)",
+      "Bash(gh repo *)",
+      "Bash(git push *)",
+      "Bash(git clone *)",
+      "Bash(./gg save *)"
     ]
   }
 }

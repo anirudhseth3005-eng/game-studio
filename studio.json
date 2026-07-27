@@ -1,9 +1,11 @@
 {
   "site": {
-    "repo": "",
+    "repo": "git@github.com:anirudhseth3005-eng/agastya.fun.git",
     "domain": "agastya.fun"
   },
   "games": {
-    "hitman-hunters": { "slug": "hitman-hunters" }
+    "hitman-hunters": {
+      "slug": "hitman-hunters"
+    }
   }
 }
