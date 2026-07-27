@@ -11,7 +11,10 @@
       "Bash(gh repo *)",
       "Bash(git push *)",
       "Bash(git clone *)",
-      "Bash(./gg save *)"
+      "Bash(./gg save *)",
+      "Bash(./gg deploy *)",
+      "Bash(curl -sS -o /dev/null -w \"HTTP %{http_code}  %{size_download} bytes\\\\n\" https://agastya.fun/hitman-hunters/)",
+      "Bash(curl -sS https://agastya.fun/)"
     ]
   }
 }
