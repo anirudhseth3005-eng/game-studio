@@ -154,12 +154,22 @@ cmd_deploy() {
   cp "$src" "$clone/$slug/index.html"
   # the hub page (site/index.html) is the studio's copy — push it too if it changed
   [ -f site/index.html ] && cp site/index.html "$clone/index.html"
+  # exit 9 from the subshell is our "nothing changed" signal, so the message below
+  # tells the truth instead of claiming a deploy that never happened
+  local rc=0
   ( cd "$clone"
     git add -A
-    if git diff --cached --quiet; then printf "Nothing new to publish.\n"; exit 0; fi
+    git diff --cached --quiet && exit 9
     git commit -qm "deploy $g $(basename "$src")"
-    git push -q )
-  ok "🚀 Deployed! Live in ~30s at  https://$domain/$slug/"
+    git push -q ) || rc=$?
+  if [ "$rc" = "9" ]; then
+    ok "✅ Already live — $(basename "$src") is identical to what's published."
+    printf "   ${C_D}https://%s/%s/${C_0}\n" "$domain" "$slug"
+  elif [ "$rc" != "0" ]; then
+    die "❌ Deploy FAILED (git exited $rc). Nothing was published."
+  else
+    ok "🚀 Deployed! Live in ~30s at  https://$domain/$slug/"
+  fi
 }
 
 cmd_help() {
