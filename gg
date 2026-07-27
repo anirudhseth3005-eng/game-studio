@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+# ============================================================
+#  gg — Agastya's Game Studio command tool
+#  Run ./gg help to see everything it can do.
+# ============================================================
+set -euo pipefail
+STUDIO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$STUDIO"
+
+C_G='\033[1;32m'; C_Y='\033[1;33m'; C_B='\033[1;36m'; C_R='\033[1;31m'; C_D='\033[2m'; C_0='\033[0m'
+say()  { printf "${C_B}%s${C_0}\n" "$*"; }
+ok()   { printf "${C_G}%s${C_0}\n" "$*"; }
+warn() { printf "${C_Y}%s${C_0}\n" "$*"; }
+die()  { printf "${C_R}%s${C_0}\n" "$*" >&2; exit 1; }
+
+# ---------- which game are we talking about? ----------
+resolve_game() {
+  local g="${1:-}"
+  if [ -n "$g" ]; then
+    [ -d "games/$g" ] || die "❌ No game called '$g'. Games: $(ls games 2>/dev/null | tr '\n' ' ')"
+    echo "$g"; return
+  fi
+  local list count
+  list=$(ls games 2>/dev/null || true)
+  count=$(echo "$list" | grep -c . || true)
+  [ "$count" = "1" ] || die "❌ Which game? Options: $(echo "$list" | tr '\n' ' ')"
+  echo "$list"
+}
+current_file() {
+  local g="$1"
+  [ -f "games/$g/CURRENT" ] || die "❌ games/$g/CURRENT is missing (it names the live build file)."
+  local f; f=$(tr -d '[:space:]' < "games/$g/CURRENT")
+  [ -f "games/$g/$f" ] || die "❌ CURRENT points at '$f' but games/$g/$f doesn't exist."
+  echo "games/$g/$f"
+}
+cfg() { # cfg <json.path> — read studio.json, empty string if unset
+  node -e "try{const c=require('./studio.json');const v='$1'.split('.').reduce((a,k)=>a&&a[k],c);process.stdout.write(v==null?'':String(v))}catch(e){}" 2>/dev/null || true
+}
+
+# ---------- commands ----------
+cmd_status() {
+  say "🎮 GAME STUDIO — $STUDIO"; echo
+  for g in $(ls games 2>/dev/null); do
+    local f; f=$(current_file "$g")
+    printf "  ${C_G}%s${C_0}\n" "$g"
+    printf "    live build : %s  ${C_D}(%s)${C_0}\n" "$(basename "$f")" "$(du -h "$f" | cut -f1)"
+    printf "    versions   : %s\n" "$(ls games/"$g"/*.html 2>/dev/null | wc -l | tr -d ' ')"
+  done
+  echo
+  say "📦 GIT"
+  printf "  branch     : %s\n" "$(git branch --show-current 2>/dev/null || echo '—')"
+  printf "  commits    : %s\n" "$(git rev-list --count HEAD 2>/dev/null || echo 0)"
+  printf "  checkpoints: %s\n" "$(git tag | wc -l | tr -d ' ')"
+  local remote; remote=$(git remote get-url origin 2>/dev/null || echo '')
+  printf "  remote     : %s\n" "${remote:-— none yet —}"
+  local dirty; dirty=$(git status --porcelain | wc -l | tr -d ' ')
+  if [ "$dirty" != "0" ]; then warn "  ⚠️  $dirty unsaved change(s) — run: ./gg save \"what you did\""
+  else ok "  ✅ everything saved"; fi
+  echo
+  say "🌐 DEPLOY"
+  local sr; sr=$(cfg site.repo)
+  if [ -z "$sr" ]; then warn "  not configured yet (set site.repo in studio.json)"
+  else printf "  site repo  : %s\n  live at    : https://%s/\n" "$sr" "$(cfg site.domain)"; fi
+}
+
+cmd_check() {
+  local g; g=$(resolve_game "${1:-}")
+  local f; f=$(current_file "$g")
+  say "🔍 Syntax-checking $f"
+  node tools/checkjs.mjs "$f"
+}
+
+cmd_save() {
+  local msg="${1:-}"
+  [ -n "$msg" ] || die "❌ Say what you did:  ./gg save \"added the elevator\""
+  git add -A
+  if git diff --cached --quiet; then warn "Nothing changed — nothing to save."; return; fi
+  git commit -qm "$msg"
+  ok "✅ Saved: $msg"
+  if git remote get-url origin >/dev/null 2>&1; then
+    git push -q origin "$(git branch --show-current)" && ok "☁️  Pushed to GitHub"
+  else
+    warn "☁️  No GitHub remote yet — saved locally only."
+  fi
+}
+
+cmd_checkpoint() {
+  local name="${1:-}"; local msg="${2:-checkpoint $name}"
+  [ -n "$name" ] || die "❌ Name it:  ./gg checkpoint v9 \"interiors + elevator\""
+  git rev-parse "$name" >/dev/null 2>&1 && die "❌ Checkpoint '$name' already exists."
+  git add -A
+  git diff --cached --quiet || git commit -qm "$msg"
+  git tag -a "$name" -m "$msg"
+  ok "🏁 Checkpoint '$name' created — you can always come back to this exact moment."
+  if git remote get-url origin >/dev/null 2>&1; then
+    git push -q origin "$(git branch --show-current)" --tags && ok "☁️  Pushed to GitHub"
+  fi
+}
+
+cmd_list() {
+  say "🏁 CHECKPOINTS (newest first)"
+  if [ -z "$(git tag)" ]; then warn "  none yet — make one with ./gg checkpoint v9 \"...\""; return; fi
+  git for-each-ref --sort=-creatordate --format='  %(refname:short)|%(creatordate:short)|%(contents:subject)' refs/tags \
+    | while IFS='|' read -r t d s; do printf "  ${C_G}%-14s${C_0} ${C_D}%s${C_0}  %s\n" "$t" "$d" "$s"; done
+}
+
+cmd_back() {
+  local name="${1:-}"
+  [ -n "$name" ] || die "❌ Which checkpoint?  ./gg list  to see them."
+  git rev-parse "$name" >/dev/null 2>&1 || die "❌ No checkpoint called '$name'."
+  git add -A
+  git diff --cached --quiet || { git commit -qm "auto-save before going back to $name"; warn "💾 Auto-saved your current work first (nothing is lost)."; }
+  git checkout "$name" -- .
+  ok "⏪ Restored the files from checkpoint '$name'."
+  warn "   Nothing is committed yet — look around, then ./gg save \"back to $name\" to keep it,"
+  warn "   or  git checkout HEAD -- .   to undo the restore."
+}
+
+cmd_new() {
+  local ver="${1:-}"; local g; g=$(resolve_game "${2:-}")
+  [ -n "$ver" ] || die "❌ Version label needed:  ./gg new v9"
+  local src; src=$(current_file "$g")
+  local base; base=$(basename "$src" .html); base="${base%%-v[0-9]*}"
+  local dst="games/$g/${base}-${ver}.html"
+  [ -f "$dst" ] && die "❌ $dst already exists."
+  cp "$src" "$dst"
+  basename "$dst" > "games/$g/CURRENT"
+  ok "🆕 $(basename "$src")  →  $(basename "$dst")"
+  ok "   CURRENT now points at the new version. The old one is untouched."
+}
+
+cmd_play() {
+  local g; g=$(resolve_game "${1:-}")
+  local f; f=$(current_file "$g")
+  ok "▶️  Opening $f"; open "$f"
+}
+
+cmd_deploy() {
+  local g; g=$(resolve_game "${1:-}")
+  local repo; repo=$(cfg site.repo)
+  local domain; domain=$(cfg site.domain)
+  local slug; slug=$(cfg "games.$g.slug"); slug="${slug:-$g}"
+  [ -n "$repo" ] || die "❌ Deploy isn't configured yet. Set site.repo in studio.json first."
+  local src; src=$(current_file "$g")
+
+  say "🔍 Checking the build before it goes live…"
+  node tools/checkjs.mjs "$src" || die "❌ Build has a syntax error — NOT deploying."
+
+  local clone=".site-clone"
+  if [ -d "$clone/.git" ]; then (cd "$clone" && git pull -q --ff-only)
+  else say "📥 Cloning your website repo…"; git clone -q "$repo" "$clone"; fi
+
+  mkdir -p "$clone/$slug"
+  cp "$src" "$clone/$slug/index.html"
+  ( cd "$clone"
+    git add -A
+    if git diff --cached --quiet; then printf "Nothing new to publish.\n"; exit 0; fi
+    git commit -qm "deploy $g $(basename "$src")"
+    git push -q )
+  ok "🚀 Deployed! Live in ~30s at  https://$domain/$slug/"
+}
+
+cmd_help() {
+cat <<EOF
+
+  🎮 gg — your game studio tool
+
+  ${C_G}SEEING WHERE YOU ARE${C_0}
+    ./gg status              what's built, what's saved, what's live
+    ./gg list                all your checkpoints
+    ./gg play                open the current build in your browser
+
+  ${C_G}SAVING YOUR WORK${C_0}
+    ./gg save "what I did"   save + push to GitHub (do this often!)
+    ./gg checkpoint v9 "…"   plant a flag you can always return to
+    ./gg back v8.1           rewind the files to a checkpoint (auto-saves first)
+
+  ${C_G}BUILDING${C_0}
+    ./gg new v9              copy the current build to a new version file
+    ./gg check               run node --check on the build's JavaScript
+
+  ${C_G}SHIPPING${C_0}
+    ./gg deploy              syntax-check, then publish to your website
+
+  Add a game name at the end when you have more than one:  ./gg check hitman-hunters
+
+EOF
+}
+
+case "${1:-help}" in
+  status)     shift; cmd_status "$@" ;;
+  check)      shift; cmd_check "$@" ;;
+  save)       shift; cmd_save "$@" ;;
+  checkpoint) shift; cmd_checkpoint "$@" ;;
+  list)       shift; cmd_list "$@" ;;
+  back)       shift; cmd_back "$@" ;;
+  new)        shift; cmd_new "$@" ;;
+  play)       shift; cmd_play "$@" ;;
+  deploy)     shift; cmd_deploy "$@" ;;
+  help|-h|--help) cmd_help ;;
+  *) die "❌ Unknown command '$1'. Try: ./gg help" ;;
+esac

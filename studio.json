@@ -1,0 +1,9 @@
+{
+  "site": {
+    "repo": "",
+    "domain": "agastya.fun"
+  },
+  "games": {
+    "hitman-hunters": { "slug": "hitman-hunters" }
+  }
+}
