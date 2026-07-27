@@ -1,9 +1,11 @@
 # CLAUDE.md — HITMAN HUNTERS 3D · Project Handoff
 
 You are joining an ongoing game project as the engineering partner. Read this whole
-file, then read `hitman-hunters-3d-v8-1.html` (the live build) top to bottom, then
-read `HITMAN-HUNTERS-CLAUDE-CODE-PROMPTS.md` (PROMPT 0 has the full architecture map
-and a quiz you must pass before touching code).
+file, then read the CURRENT live build top to bottom — the one-line `CURRENT` file
+names it (today: `hitman-hunters-3d-v9.html`) — then read
+`docs/HITMAN-HUNTERS-CLAUDE-CODE-PROMPTS.md` (PROMPT 0 has the full architecture map
+and a quiz you must pass before touching code). Note PROMPT 0 describes v8.1; the v9
+floor system is documented in §4 below.
 
 ---
 
@@ -86,14 +88,39 @@ version, with a partner who explains everything.
   towers, antennas — rboxGeo cache), faster cars with skid marks + off-road dirt
   trails, NPC pedestrians that scatter from gunfire, HARBOR & FERRY (real ocean,
   islands, pier, NPC captain, rideable loop).
-- **v8.1 (CURRENT)** — REAL TREES, built to his written spec: 4 species (oak/birch/
+- **v8.1** — REAL TREES, built to his written spec: 4 species (oak/birch/
   pine/cypress) with branches, random lean, per-instance color tints, per-species
   perch heights, and GPU vertex-shader wind. 8 draw calls for the whole forest.
+- **v9 (CURRENT)** — INSIDE & UP. The game got a third dimension it never had.
+  - `buildRoom()` — the reusable interior shell: four walls with a GAP in one of them.
+    The gap IS the doorway; no door logic exists. Hideout and lift lobby both use it.
+    **Every future interior should be built from this.**
+  - `platforms[]` + `supportY(x,z,y)` — the FLOOR SYSTEM. supportY answers "how high
+    is the floor under the player right now"; ground is 1.7, any platform you're on
+    wins instead. Player physics never learned what a building is.
+  - Obstacles gained an optional **`y0` (bottom)**: `addObstacle(x,z,hw,hd,h,y0)`.
+    Without it, behaviour is exactly v8.1. With it, the thing only exists between y0
+    and h — that's how a rooftop railing isn't an invisible wall in the street.
+    All 8 obstacle loops (collide, LOS, cover, cars, heli, minimap, tree/pickup
+    placement) skip `y0` obstacles for ground-bound entities.
+  - `collide(pos,r,ignore,feetY)` — feetY is OPTIONAL and only the player passes it.
+    Enemies, friends, pedestrians call it exactly as before and behave identically.
+  - THE LIFT: `pickLiftTower()` picks the tallest downtown tower **with a clear plot**
+    on its south face (height alone isn't enough). Lobby → car → walkway → roof.
+    A safety GATE closes the shaft whenever the car isn't docked up top.
+  - Hideout interior: furniture + a trophy pedestal per weapon skin you own.
+  - **Reload fix:** both `location.reload()` calls are now gated on `autoSaveOK`.
+  - Bug found and fixed on the way in: v8.1 dropped the hideout straight through a
+    building. Harmless when it was a solid box; fatal once you could walk inside.
+    Building placement now keeps an 18m plot clear around HIDEOUT.
 
 ## 5. Current state & environment quirks
 
-- Live build: `hitman-hunters-3d-v8-1.html`. Everything above works.
-- `treeScale[]` now stores PERCH HEIGHTS, not scales. Climb code uses it directly.
+- Live build: whatever `CURRENT` says (today `hitman-hunters-3d-v9.html`).
+  Live on the web at https://agastya.fun/hitman-hunters/
+- `treeScale[]` stores PERCH HEIGHTS, not scales. Climb code uses it directly.
+- The lift tower is chosen at world-build time and differs per map size — it is NOT
+  always the visually tallest building, because the plot has to be clear.
 - Opened as a plain local file, `window.storage` doesn't exist → the game correctly
   shows "⚠️ Auto-save isn't available" and SAVE CODES carry all progress. This is
   expected behavior, not a bug.
@@ -102,12 +129,9 @@ version, with a partner who explains everything.
 
 ## 6. What Agastya is trying to achieve next
 
-**v9 — INSIDE & UP (his request, queued for months):**
-- Walk INSIDE the hideout through the door: a real interior (furniture, maybe a
-  stash/trophy display of owned skins), interior lighting, working doorway collision.
-- An ELEVATOR ("lift") in the tallest downtown tower: enter a lobby, ride to the
-  rooftop, snipe from the parapet. This needs a floor/height system — design it so
-  more interiors can follow.
+**v9 INSIDE & UP shipped.** The floor system is in place, so anything that needs
+height is now cheap: more interiors (`buildRoom`), more rooftops (`platforms[]`),
+balconies, multi-storey buildings, ladders.
 
 **Designer's backlog (he picks, you propose — never build unasked):**
 missions/heists with objectives · a named boss hitman · weather (rain) · more islands
@@ -118,23 +142,25 @@ friends via save codes (already works — could be celebrated in-game).
 
 ## 7. Working agreement
 
-1. Before ANY feature work: `cp` the current file to the next version name
-   (`hitman-hunters-3d-v9.html`). Never edit the only copy.
-2. After EVERY edit: extract the `<script>` and `node --check` it. Fix before replying.
+1. Before ANY feature work: `./gg new v10` from the studio root. Never edit the only
+   copy. (It copies the build and repoints `CURRENT` for you.)
+2. After EVERY edit: `./gg check`. Fix before replying. Syntax passing is the floor,
+   not the ceiling — actually exercise the feature before you claim it works.
 3. Playtest guidance in every changelog: tell him exactly what to try.
 4. Big architectural changes (like the v9 floor system): propose the design in plain
    words FIRST, get his yes, then build.
 5. When a request is ambiguous, offer 2–3 interpretations and let him choose.
-6. If git is available in this folder, commit each version with a fun message.
+6. `./gg save "msg"` as you go, `./gg checkpoint v10 "..."` when it ships,
+   `./gg deploy` to publish to agastya.fun.
 7. Bugs he reports are real. Reproduce mentally from the code, find the actual cause,
    explain it honestly (the nearRoad and save-wipe stories set that standard).
 
 ## 8. First-session checklist
 
 - [ ] Read this file (you just did)
-- [ ] Read `hitman-hunters-3d-v8-1.html` in full
-- [ ] Read PROMPT 0 in `HITMAN-HUNTERS-CLAUDE-CODE-PROMPTS.md`
+- [ ] Read the build named by `CURRENT` in full
+- [ ] Read PROMPT 0 in `docs/HITMAN-HUNTERS-CLAUDE-CODE-PROMPTS.md`
 - [ ] Pass the quiz (weapons/prices/road-fix/treeScale) in your first reply
-- [ ] Then wait for his v9 spec — or offer him the v9 interior/elevator design plan
+- [ ] Then wait for his next spec — never build from the backlog unasked
 
 Welcome to the studio. He built all of this. Keep the bar where he set it.

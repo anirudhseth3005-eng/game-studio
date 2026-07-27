@@ -10,7 +10,7 @@ WebAudio, and the whole thing runs by opening the file in a browser.
 
 | Game | What it is | Play |
 |---|---|---|
-| 🕴️ **Hitman Hunters 3D** | A browser FPS-roguelite. Endless suit-and-fedora hitmen hunt you through a living city while you build an empire between runs — hideout, helicopter, harbor, custom-painted weapons. Built in three.js. | *(deploying soon)* |
+| 🕴️ **Hitman Hunters 3D** | A browser FPS-roguelite. Endless suit-and-fedora hitmen hunt you through a living city while you build an empire between runs — hideout, helicopter, harbor, custom-painted weapons. Built in three.js. | **[Play](https://agastya.fun/hitman-hunters/)** |
 
 ## Working in here
 
