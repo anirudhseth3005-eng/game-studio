@@ -133,7 +133,7 @@ version, with a partner who explains everything.
   - Branch tips get leaf clusters; each tree gets a soft base shadow disc.
   - 11 tree draw calls (was 8). Wind shader untouched — Agastya deliberately left
     fluttering wind out of scope, so do NOT add it unasked.
-- **v9.2 (CURRENT)** — FOREST FLOOR. Ground cover: grass tufts, bushes, leaf litter,
+- **v9.2** — FOREST FLOOR. Ground cover: grass tufts, bushes, leaf litter,
   rocks. `buildGroundCover()` runs AFTER buildLift/buildHideout so their walls are
   already obstacles and nothing sprouts indoors.
   - **NONE of it collides.** buildGroundCover never calls addObstacle, on purpose —
@@ -153,6 +153,28 @@ version, with a partner who explains everything.
   - NOTE for later: the CITY is ~350 draw calls (each building is its own mesh plus
     parapet/AC/water-tower). That, not the foliage, is the real optimisation target
     if performance ever becomes a problem. Agastya has NOT asked for this.
+- **v9.3 (CURRENT)** — REAL FOLIAGE. Agastya rejected v9.1/v9.2's look outright
+  ("random ass holes on the tree, these are not trees"). He was right. Fixes:
+  - **ALL alpha-hole foliage is GONE.** Canopies, needles and bushes are SOLID.
+    Holes punched in the MIDDLE of a surface read as mould/damage — real foliage
+    breaks up at its EDGES, and the 9 tiered clumps already do that. Never put a
+    hole texture on foliage again.
+  - `foliageShadeTex()` replaced it: fully opaque, greyscale, LOW-FREQUENCY soft
+    patches. Many small circles — light OR dark — always read as dots. Broad soft
+    patches read as light falling unevenly through a canopy.
+  - Foliage colour: `offsetHSL(0, +.12, -.05)` — the sun was blowing canopies out to
+    pale mint. More saturation, less lightness.
+  - GRASS BUG (the real one): the tuft material used `side: DoubleSide`, and three.js
+    FLIPS the normal on back faces. Normals are pinned straight up, so flipped ones
+    pointed straight DOWN and rendered near-black — half of every tuft was a black
+    spike. Fixed by emitting BOTH windings in `crossQuadGeo()` with the same up-normal
+    and using FrontSide. Do not set DoubleSide on that material.
+  - Grass blades are drawn LIGHT in the texture; the per-instance tint supplies the
+    hue. Dark texture x dark tint multiplied to near-black.
+  - Leaf litter is now a soft radially-faded discolouration, not scattered brown
+    ellipses (which read as mud splats on green grass).
+  - LESSON for whoever is next: screenshot the actual render and LOOK at it before
+    claiming a visual feature works. `node --check` passing says nothing about looks.
 
 ## 5. Current state & environment quirks
 
