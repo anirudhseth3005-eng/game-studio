@@ -113,7 +113,7 @@ version, with a partner who explains everything.
   - Bug found and fixed on the way in: v8.1 dropped the hideout straight through a
     building. Harmless when it was a solid box; fatal once you could walk inside.
     Building placement now keeps an 18m plot clear around HIDEOUT.
-- **v9.1 (CURRENT)** — GOOD TREES. Agastya art-directed this one: brief was
+- **v9.1** — GOOD TREES. Agastya art-directed this one: brief was
   "cartoon, just much better" — bold shapes, no photorealism.
   - Canopies are NINE clumps in three tiers (was 3 spheres). Same three instanced
     meshes, just 3x the instances — 9 clumps cost the SAME draw calls as 3.
@@ -133,6 +133,26 @@ version, with a partner who explains everything.
   - Branch tips get leaf clusters; each tree gets a soft base shadow disc.
   - 11 tree draw calls (was 8). Wind shader untouched — Agastya deliberately left
     fluttering wind out of scope, so do NOT add it unasked.
+- **v9.2 (CURRENT)** — FOREST FLOOR. Ground cover: grass tufts, bushes, leaf litter,
+  rocks. `buildGroundCover()` runs AFTER buildLift/buildHideout so their walls are
+  already obstacles and nothing sprouts indoors.
+  - **NONE of it collides.** buildGroundCover never calls addObstacle, on purpose —
+    invisible bushes that shove the player around are the fastest way to ruin a map.
+    Keep it that way.
+  - Grass is CLUSTERED, not scattered: `clump()` picks ~270 centres and puts 4–10
+    tufts around each. Evenly-scattered tufts read as uniform fuzz; patches read as
+    grass. Same instance count, much better result.
+  - A tuft is `crossQuadGeo()` — 3 quads crossed, normals forced straight up so blades
+    take even sky light instead of flipping dark as you circle them.
+  - `windifyGrass()` weights the sway by `transformed.y`, so roots stay planted and
+    only the tips move. This is SEPARATE from tree wind, which remains untouched.
+  - `coverSpot()` rejects roads, the lake, both shop plazas, the hideout and helipad
+    aprons, and any obstacle with hw>1.2 — trunks (hw .55) are deliberately allowed
+    so grass hugs the base of trees.
+  - Cost: exactly 4 draw calls and ~25k triangles for ~2,100 pieces.
+  - NOTE for later: the CITY is ~350 draw calls (each building is its own mesh plus
+    parapet/AC/water-tower). That, not the foliage, is the real optimisation target
+    if performance ever becomes a problem. Agastya has NOT asked for this.
 
 ## 5. Current state & environment quirks
 
