@@ -6,6 +6,9 @@
   "games": {
     "hitman-hunters": {
       "slug": "hitman-hunters"
+    },
+    "rebound": {
+      "slug": "rebound"
     }
   }
 }
