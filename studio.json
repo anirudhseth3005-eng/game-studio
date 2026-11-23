@@ -9,6 +9,12 @@
     },
     "rebound": {
       "slug": "rebound"
+    },
+    "top-city": {
+      "slug": "top-city"
+    },
+    "top-race": {
+      "slug": "top-race"
     }
   }
 }
