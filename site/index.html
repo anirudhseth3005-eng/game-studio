@@ -1,13 +1,229 @@
 <!DOCTYPE html>
-<html>
-<head><title>Agastya.fun</title></head>
-<body style="background:#0a0a14;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0">
-<h1>🎮 Agastya.fun</h1>
-<p>Games by Agastya Seth</p>
-<a href="/castle-defenders/" style="color:#f7c948;font-size:20px;margin:8px 0">🏰 Castle Defenders v2.1.5</a>
-<a href="/hitman-hunters/" style="color:#f7c948;font-size:20px;margin:8px 0">🕴️ Hitman Hunters 3D v9.3</a>
-<a href="/rebound/" style="color:#f7c948;font-size:20px;margin:8px 0">🔷 Rebound v9</a>
-<a href="/top-city/" style="color:#f7c948;font-size:20px;margin:8px 0">🏙️ Top City v11</a>
-<a href="/top-race/" style="color:#f7c948;font-size:20px;margin:8px 0">🏁 Top Race v47</a>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agastya.fun — Games by Agastya Seth</title>
+<meta name="description" content="Free browser games made by Agastya Seth: multiplayer arcade, racing, open-city driving, arena action and more.">
+<style>
+  :root{
+    --bg:#07061a; --panel:rgba(22,18,58,.72); --line:rgba(140,120,255,.25);
+    --text:#f3f1ff; --dim:#a9a2d9; --gold:#ffd23f; --pink:#ff5c7a; --blue:#4cc9ff; --green:#7dff6a; --purple:#c77dff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+  body{min-height:100vh;overflow-x:hidden}
+  #bgfx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .glow{position:fixed;inset:-20%;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 20% 10%,rgba(199,125,255,.22),transparent 40%),
+               radial-gradient(circle at 85% 30%,rgba(76,201,255,.16),transparent 40%),
+               radial-gradient(circle at 50% 100%,rgba(255,92,122,.14),transparent 45%)}
+  main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:56px 16px 40px}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- hero ---------- */
+  header{text-align:center;margin-bottom:44px}
+  .logo{font-size:clamp(44px,9vw,92px);font-weight:900;letter-spacing:2px;margin:0;line-height:1;
+    background:linear-gradient(90deg,var(--pink),var(--gold),var(--green),var(--blue),var(--purple),var(--pink));
+    background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shine 8s linear infinite;filter:drop-shadow(0 0 24px rgba(199,125,255,.35))}
+  @keyframes shine{to{background-position:300% 0}}
+  .tag{color:var(--dim);font-size:clamp(16px,2.4vw,20px);margin:14px 0 0}
+  .stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px;color:var(--dim)}
+  .pill b{color:var(--text)}
+
+  /* ---------- featured ---------- */
+  .feature{display:grid;grid-template-columns:1.1fr 1fr;border-radius:24px;overflow:hidden;margin-bottom:44px;
+    background:var(--panel);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.03) inset;
+    transition:transform .2s,box-shadow .2s}
+  .feature:hover{transform:translateY(-4px);box-shadow:0 26px 70px rgba(0,0,0,.5),0 0 40px rgba(199,125,255,.25)}
+  .feature .art{position:relative;min-height:280px;background:linear-gradient(135deg,#2a1162,#0f2a66)}
+  .feature canvas{position:absolute;inset:0;width:100%;height:100%}
+  .feature .info{padding:30px 30px 28px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+  .new{align-self:flex-start;background:var(--green);color:#08210a;font-weight:900;font-size:12px;letter-spacing:1px;padding:4px 10px;border-radius:6px}
+  .feature h2{margin:0;font-size:clamp(30px,4vw,42px)}
+  .feature p{margin:0;color:var(--dim);line-height:1.5}
+  .play{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-weight:900;font-size:18px;
+    padding:13px 26px;border-radius:14px;background:linear-gradient(90deg,var(--pink),var(--purple));box-shadow:0 8px 24px rgba(255,92,122,.35);
+    transition:transform .12s,filter .12s}
+  .feature:hover .play,.play:hover{filter:brightness(1.12);transform:scale(1.04)}
+  @media (max-width:760px){.feature{grid-template-columns:1fr}.feature .art{min-height:200px}}
+
+  /* ---------- grid ---------- */
+  h3.sec{font-size:22px;margin:0 0 16px;display:flex;align-items:center;gap:10px}
+  h3.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+  .card{display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:var(--panel);border:1px solid var(--line);
+    transition:transform .18s,box-shadow .18s,border-color .18s}
+  .card:hover{transform:translateY(-6px) rotate(-.4deg);border-color:var(--c);box-shadow:0 18px 40px rgba(0,0,0,.45),0 0 28px color-mix(in srgb,var(--c) 45%,transparent)}
+  .card .art{height:150px;position:relative;display:grid;place-items:center;overflow:hidden;
+    background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--c) 70%,#fff 0%),transparent 60%),linear-gradient(135deg,var(--c),var(--c2))}
+  .card .art::before{content:"";position:absolute;inset:0;opacity:.18;
+    background-image:linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px);
+    background-size:22px 22px;transform:perspective(200px) rotateX(55deg) translateY(40px) scale(2)}
+  .card .em{font-size:68px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));transition:transform .25s;position:relative}
+  .card:hover .em{transform:scale(1.15) rotate(-6deg)}
+  .card .ver{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);font-size:12px;font-weight:bold;padding:3px 8px;border-radius:6px}
+  .card .body{padding:16px 16px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .card h4{margin:0;font-size:21px}
+  .card p{margin:0;color:var(--dim);font-size:14px;line-height:1.45;flex:1}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tags span{font-size:11px;font-weight:bold;letter-spacing:.5px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--text)}
+  .card .go{margin-top:4px;font-weight:900;color:var(--c)}
+
+  footer{text-align:center;color:var(--dim);font-size:14px;margin-top:56px;line-height:1.7}
+  footer b{color:var(--text)}
+  @media (prefers-reduced-motion:reduce){.logo{animation:none}.card,.feature{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="bgfx"></canvas>
+<div class="glow"></div>
+
+<main>
+  <header>
+    <h1 class="logo">AGASTYA.FUN</h1>
+    <p class="tag">Free browser games, built by <b>Agastya Seth</b>. No downloads, just click and play.</p>
+    <div class="stats">
+      <span class="pill">🎮 <b>6</b> games</span>
+      <span class="pill">🌐 <b>Multiplayer</b> online</span>
+      <span class="pill">⚡ Runs in your <b>browser</b></span>
+    </div>
+  </header>
+
+  <a class="feature" href="/arcade/">
+    <div class="art"><canvas id="arcadeArt"></canvas></div>
+    <div class="info">
+      <span class="new">NEW · MULTIPLAYER</span>
+      <h2>🕹️ The Arcade</h2>
+      <p>Jump into a public lobby and play mini-games with up to 8 players. Bounce bullets in Rebound Arena,
+        race in Mini Race, then everyone votes on what's next.</p>
+      <p style="font-size:13px">🛡️ Safe by design: random names, no typing, no chat, just quick-message buttons.</p>
+      <span class="play">PLAY NOW ▶</span>
+    </div>
+  </a>
+
+  <h3 class="sec">🎮 All games</h3>
+  <div class="grid">
+    <a class="card" href="/top-race/" style="--c:#ff9f43;--c2:#b3362d">
+      <div class="art"><span class="ver">v47</span><span class="em">🏁</span></div>
+      <div class="body"><h4>Top Race</h4>
+        <p>A 3D circuit racing career. Tracks, championships, car upgrades, and online races against friends.</p>
+        <div class="tags"><span>3D</span><span>RACING</span><span>MULTIPLAYER</span></div>
+        <span class="go">PLAY ▶</span></div>
+    </a>
+    <a class="card" href="/top-city/" style="--c:#4cc9ff;--c2:#2d3fb4">
+      <div class="art"><span class="ver">v11</span><span class="em">🏙️</span></div>
+      <div class="body"><h4>Top City</h4>
+        <p>Open-city driving. Take jobs, pull heists, outrun the police, and stack up credits.</p>
+        <div class="tags"><span>3D</span><span>OPEN WORLD</span><span>MULTIPLAYER</span></div>
+        <span class="go">PLAY ▶</span></div>
+    </a>
+    <a class="card" href="/hitman-hunters/" style="--c:#ff5c7a;--c2:#4a1252">
+      <div class="art"><span class="ver">v9.3</span><span class="em">🕴️</span></div>
+      <div class="body"><h4>Hitman Hunters 3D</h4>
+        <p>Endless hitmen hunt you through a living city. Survive runs, then build your empire: hideout, helicopter, harbor.</p>
+        <div class="tags"><span>3D</span><span>FPS</span><span>ROGUELITE</span></div>
+        <span class="go">PLAY ▶</span></div>
+    </a>
+    <a class="card" href="/rebound/" style="--c:#c77dff;--c2:#1f2a8a">
+      <div class="art"><span class="ver">v9</span><span class="em">🔷</span></div>
+      <div class="body"><h4>Rebound</h4>
+        <p>You have no gun, so you steal theirs. Dash through enemy bullets to send them flying back.</p>
+        <div class="tags"><span>ARENA</span><span>ACTION</span></div>
+        <span class="go">PLAY ▶</span></div>
+    </a>
+    <a class="card" href="/castle-defenders/" style="--c:#7dff6a;--c2:#1e6b3a">
+      <div class="art"><span class="ver">v2.1.5</span><span class="em">🏰</span></div>
+      <div class="body"><h4>Castle Defenders</h4>
+        <p>Build turrets and hold the castle against wave after wave, including night waves and golden elites.</p>
+        <div class="tags"><span>TOWER DEFENSE</span><span>STRATEGY</span></div>
+        <span class="go">PLAY ▶</span></div>
+    </a>
+  </div>
+
+  <footer>
+    Made by <b>Agastya Seth</b> · Agastya's Game Studio<br>
+    Every game is one file, drawn and voiced in code. No downloads, no ads.
+  </footer>
+</main>
+
+<script>
+// ---- floating neon shapes in the background ----
+(() => {
+  const cv = document.getElementById('bgfx'), c = cv.getContext('2d');
+  const cols = ['#ff5c7a', '#ffd23f', '#7dff6a', '#4cc9ff', '#c77dff'];
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, bits = [];
+  const fit = () => {
+    const r = devicePixelRatio || 1; W = innerWidth; H = innerHeight;
+    cv.width = W * r; cv.height = H * r; cv.style.width = W + 'px'; cv.style.height = H + 'px'; c.setTransform(r, 0, 0, r, 0, 0);
+    bits = Array.from({ length: Math.round(W * H / 26000) }, () => ({
+      x: Math.random() * W, y: Math.random() * H, s: 3 + Math.random() * 7, v: 6 + Math.random() * 18,
+      a: Math.random() * 6.28, va: (Math.random() - .5) * .8, k: Math.random() * 3 | 0, col: cols[Math.random() * cols.length | 0],
+    }));
+  };
+  fit(); addEventListener('resize', fit);
+  let last = performance.now();
+  const loop = t => {
+    const dt = Math.min(.05, (t - last) / 1000); last = t;
+    c.clearRect(0, 0, W, H);
+    for (const b of bits) {
+      if (!still) { b.y -= b.v * dt; b.a += b.va * dt; if (b.y < -20) { b.y = H + 20; b.x = Math.random() * W; } }
+      c.save(); c.translate(b.x, b.y); c.rotate(b.a); c.globalAlpha = .35; c.strokeStyle = b.col; c.lineWidth = 1.5;
+      c.beginPath();
+      if (b.k === 0) c.arc(0, 0, b.s, 0, 6.28);
+      else if (b.k === 1) c.rect(-b.s, -b.s, b.s * 2, b.s * 2);
+      else { c.moveTo(0, -b.s); c.lineTo(b.s, b.s); c.lineTo(-b.s, b.s); c.closePath(); }
+      c.stroke(); c.restore();
+    }
+    if (!still) requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+})();
+
+// ---- the featured card: a tiny Rebound Arena demo that plays itself ----
+(() => {
+  const cv = document.getElementById('arcadeArt'), c = cv.getContext('2d');
+  const cols = ['#ff5c7a', '#4cc9ff', '#7dff6a', '#ffd23f'];
+  let W = 0, H = 0;
+  const fit = () => { const r = devicePixelRatio || 1, b = cv.getBoundingClientRect(); W = b.width; H = b.height; cv.width = W * r; cv.height = H * r; c.setTransform(r, 0, 0, r, 0, 0); };
+  fit(); addEventListener('resize', fit);
+  const ships = cols.map((col, i) => ({ col, x: 0, y: 0, a: i * 1.57, r: .28 + i * .04, sp: .5 + i * .15, dash: 0, trail: [] }));
+  const shots = []; let fire = 0, last = performance.now();
+  const loop = t => {
+    const dt = Math.min(.05, (t - last) / 1000); last = t;
+    c.fillStyle = 'rgba(13,11,38,.35)'; c.fillRect(0, 0, W, H);
+    c.strokeStyle = 'rgba(160,140,255,.12)'; c.lineWidth = 1; c.beginPath();
+    for (let x = 0; x < W; x += 28) { c.moveTo(x, 0); c.lineTo(x, H); } for (let y = 0; y < H; y += 28) { c.moveTo(0, y); c.lineTo(W, y); } c.stroke();
+    const cx = W / 2, cy = H / 2;
+    // the turret in the middle
+    c.save(); c.translate(cx, cy); c.rotate(t / 900); c.fillStyle = '#5a2a6a'; c.strokeStyle = '#ff9f43'; c.lineWidth = 3;
+    c.beginPath(); for (let i = 0; i < 6; i++) c.lineTo(Math.cos(i * 1.047) * 16, Math.sin(i * 1.047) * 16); c.closePath(); c.fill(); c.stroke(); c.restore();
+    if ((fire -= dt) <= 0) { fire = 1.1; for (let i = 0; i < 8; i++) { const a = t / 900 + i * .785; shots.push({ x: cx, y: cy, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, o: -1 }); } }
+    for (const s of ships) {
+      s.a += s.sp * dt; const R = Math.min(W, H) * s.r * 1.4;
+      const nx = cx + Math.cos(s.a) * R * 1.3, ny = cy + Math.sin(s.a * 1.3) * R * .8;
+      const fx = nx - s.x, fy = ny - s.y; s.x = nx; s.y = ny; s.h = Math.atan2(fy, fx);
+      if (s.dash > 0) s.dash -= dt;
+      for (const b of shots) if (b.o < 0 && Math.hypot(b.x - s.x, b.y - s.y) < 26) {
+        s.dash = .18; b.o = s.col; const m = Math.hypot(b.vx, b.vy) || 1; b.vx = -b.vx / m * 320; b.vy = -b.vy / m * 320;
+      }
+      s.trail.push({ x: s.x, y: s.y }); if (s.trail.length > 10) s.trail.shift();
+      s.trail.forEach((p, i) => { c.globalAlpha = i / 30; c.fillStyle = s.col; c.beginPath(); c.arc(p.x, p.y, 5, 0, 6.28); c.fill(); });
+      c.globalAlpha = 1; c.save(); c.translate(s.x, s.y); c.rotate(s.h); c.shadowColor = s.col; c.shadowBlur = s.dash > 0 ? 24 : 10;
+      c.fillStyle = s.dash > 0 ? '#fff' : s.col; c.beginPath(); c.moveTo(12, 0); c.lineTo(-8, 8); c.lineTo(-4, 0); c.lineTo(-8, -8); c.closePath(); c.fill(); c.restore();
+    }
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const b = shots[i]; b.x += b.vx * dt; b.y += b.vy * dt;
+      if (b.x < -10 || b.x > W + 10 || b.y < -10 || b.y > H + 10) { shots.splice(i, 1); continue; }
+      c.fillStyle = b.o < 0 ? '#ff7a4a' : b.o; c.beginPath(); c.arc(b.x, b.y, b.o < 0 ? 4 : 6, 0, 6.28); c.fill();
+    }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+})();
+</script>
 </body>
 </html>

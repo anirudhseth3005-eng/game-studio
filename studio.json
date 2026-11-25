@@ -15,6 +15,9 @@
     },
     "top-race": {
       "slug": "top-race"
+    },
+    "arcade": {
+      "slug": "arcade"
     }
   }
 }
